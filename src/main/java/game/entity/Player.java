@@ -81,6 +81,9 @@ public class Player {
     private int attackDurationTicks1 = 0;
     private int attackDurationTicks2 = 0;
     private boolean lastAttackPressed = false;
+    private int attackId = 0;        // increments each time an attack starts
+    private boolean attackJustStarted = false;
+
 
     // Post-attack combo window (for Attack2)
     private boolean inComboWindow = false;
@@ -115,7 +118,6 @@ public class Player {
             int frameHeight = 192;
             int idleFramesCount = 8;
             int runFramesCount = 6;
-            int guardFramesCount = 6; // set to the real count in your file
 
 
             // Slice idle
@@ -293,7 +295,9 @@ public class Player {
                     attackTicks = 0;
                     inComboWindow = false;
                     comboWindowTicksRemaining = 0;
-                    System.out.println("ATTACK2 started from combo window");
+                    attackId++;
+
+//                    System.out.println("ATTACK2 started from combo window");
                 } else if (attackAnimation != null) {
                     // Fresh Attack1
                     attackPlaying = true;
@@ -301,7 +305,9 @@ public class Player {
                     attackTicks = 0;
                     inComboWindow = false;
                     comboWindowTicksRemaining = 0;
-                    System.out.println("ATTACK1 started");
+
+                    attackId++;
+//                    System.out.println("ATTACK1 started");
                 }
             }
             // If an attack is already playing (ATTACK1 or ATTACK2), ignore extra presses
@@ -321,7 +327,7 @@ public class Player {
                 AttackPhase finishedPhase = attackPhase;
 
                 // Attack (or combo) finished
-                System.out.println("Attack phase " + finishedPhase + " finished");
+//                System.out.println("Attack phase " + finishedPhase + " finished");
                 attackPlaying = false;
                 attackPhase = AttackPhase.NONE;
                 attackTicks = 0;
@@ -330,16 +336,16 @@ public class Player {
                 if (finishedPhase == AttackPhase.ATTACK1 && attack2Animation != null) {
                     inComboWindow = true;
                     comboWindowTicksRemaining = COMBO_WINDOW_TICKS;
-                    System.out.println("Combo window opened for ATTACK2");
+//                    System.out.println("Combo window opened for ATTACK2");
                 } else {
                     inComboWindow = false;
                     comboWindowTicksRemaining = 0;
                 }
             }
-        } else if (guardPressed && guardAnimation != null) {
+        } /*else if (guardPressed && guardAnimation != null) {
             // 3. Guard: hold-based state
             animType = AnimationType.GUARD;
-        } else {
+        }*/ else {
             // 4. Normal movement-based states (RUN / IDLE)
             boolean isMoving = (dx != 0 || dy != 0);
 
@@ -385,6 +391,51 @@ public class Player {
         // Remember previous attack state for edge detection
         lastAttackPressed = attackPressed;
     }
+
+    public int getAttackId() {
+        return attackId;
+    }
+
+//    public boolean isAttacking() {
+//        return attackPlaying;
+//    }
+
+    // Only “active frames” deal damage (avoid hitting on windup/recovery)
+    public boolean isAttackActive() {
+        if (!attackPlaying) return false;
+
+        int currentDuration = (attackPhase == AttackPhase.ATTACK2)
+                ? attackDurationTicks2
+                : attackDurationTicks1;
+
+        if (currentDuration <= 0) return false;
+
+        int start = (int) (currentDuration * 0.30f);
+        int end = (int) (currentDuration * 0.70f);
+
+        return attackTicks >= start && attackTicks <= end;
+    }
+
+    /**
+     * Returns a world-space hitbox (in pixels) for the sword swing.
+     * Uses your “feet collider” as the anchor.
+     */
+    public Rect getAttackHitbox() {
+        if (!isAttackActive()) return null;
+
+        int hbW = (int) (22 * 4.2);
+        int hbH = 14 * 7;
+
+        int baseX = (int) (x - colW - 40 / 2f);
+        int baseY = (int) (y + FOOT_OFFSET_Y - colH * 7);
+
+        int hx = facingLeft
+                ? baseX - hbW
+                : baseX + colW;
+
+        return new Rect(hx, baseY, hbW, hbH);
+    }
+
 
     // Helper to choose animation based on {AnimationType, MoveType}
     private Animation getAnimation(AnimationType type, MoveType move) {
@@ -495,6 +546,17 @@ public class Player {
 
         g.setColor(new Color(0, 255, 255, 120));
         g.drawRect(sx, sy, colW, colH);
+    }
+
+    public void debugDrawAttackHitbox(Graphics2D g, Camera cam) {
+        Rect hb = getAttackHitbox();
+        if (hb == null) return;
+
+        int sx = hb.x - (int) cam.x;
+        int sy = hb.y - (int) cam.y;
+
+        g.setColor(new Color(255, 0, 0, 150));
+        g.drawRect(sx, sy, hb.w, hb.h);
     }
 
 
