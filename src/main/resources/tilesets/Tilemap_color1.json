@@ -1,0 +1,20 @@
+{ "columns":9,
+ "grid":
+    {
+     "height":100,
+     "orientation":"orthogonal",
+     "width":100
+    },
+ "image":"..\/tiles\/terrain\/Tilemap_color1.png",
+ "imageheight":384,
+ "imagewidth":576,
+ "margin":0,
+ "name":"Tilmap_color1",
+ "spacing":0,
+ "tilecount":54,
+ "tiledversion":"1.11.2",
+ "tileheight":64,
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.10"
+}
