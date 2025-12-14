@@ -10,6 +10,10 @@ import java.nio.charset.StandardCharsets;
 
 
 public class TiledLoader {
+
+    private static final int FLIP_MASK = 0xE0000000;  // top 3 bits
+    private static final int GID_MASK = 0x1FFFFFFF;
+
     public static TiledMap loadJsonMap(String resource) {
         try (InputStream in = TiledLoader.class.getResourceAsStream(resource)) {
             if (in == null) throw new IllegalArgumentException("Missing resource: " + resource);
@@ -26,6 +30,7 @@ public class TiledLoader {
 
             // --- Tileset handling ---
             // Support either embedded image tileset or external JSON tileset via `source`
+            // Currently supports single tileset maps (tilesets[0])
             JsonObject ts0 = root.getAsJsonArray("tilesets").get(0).getAsJsonObject();
             int firstGid = ts0.get("firstgid").getAsInt();
             String image;
@@ -42,12 +47,9 @@ public class TiledLoader {
                 try (InputStream tsIn = TiledLoader.class.getResourceAsStream(tilesetRes)) {
                     if (tsIn == null) throw new IllegalArgumentException("Missing tileset resource: " + tilesetRes);
                     JsonObject tsRoot = JsonParser.parseReader(new InputStreamReader(tsIn, StandardCharsets.UTF_8)).getAsJsonObject();
-                    image = ResourcePathResolver.resolve(mapFolder,tsRoot.get("image").getAsString());
+                    String tilesetFolder = tilesetRes.substring(0, tilesetRes.lastIndexOf('/') + 1);
+                    image = ResourcePathResolver.resolve(tilesetFolder, tsRoot.get("image").getAsString());
                     columns = tsRoot.get("columns").getAsInt();
-                    // Optional override if tile sizes differ from map (rare but supported)
-                    if (tsRoot.has("tilewidth") && tsRoot.has("tileheight")) {
-                        // We rely on map tileW/tileH for rendering grid; most cases match.
-                    }
                 }
             } else {
                 // Embedded tileset
@@ -70,7 +72,11 @@ public class TiledLoader {
                 if (type.equals("tilelayer")) {
                     JsonArray arr = lay.get("data").getAsJsonArray();
                     int[] data = new int[arr.size()];
-                    for (int i = 0; i < arr.size(); i++) data[i] = arr.get(i).getAsInt();
+                    for (int i = 0; i < arr.size(); i++) {
+                        int raw = arr.get(i).getAsInt();
+                        int gid = raw & GID_MASK;
+                        data[i] = gid;
+                    }
                     map.addLayer(data);
                 } else if (type.equals("objectgroup") && lay.get("name").getAsString().equalsIgnoreCase("colliders")) {
                     for (JsonElement oe : lay.get("objects").getAsJsonArray()) {
@@ -85,7 +91,7 @@ public class TiledLoader {
             }
             return map;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Failed to load map: " + resource, ex);
         }
     }
 }

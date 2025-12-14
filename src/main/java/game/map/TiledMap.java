@@ -25,7 +25,6 @@ public class TiledMap {
 
 
     public final List<Rect> colliders = new ArrayList<>();
-    public final List<Rect> stairs = new ArrayList<>();
 
 
     public TiledMap(int width, int height, int tileWidth, int tileHeight) {
@@ -48,13 +47,14 @@ public class TiledMap {
 
 
     void setTileset(String imagePath, int firstGid, int columns) {
-        try {
-            tileset = ImageIO.read(Objects.requireNonNull(
-                    getClass().getResourceAsStream(imagePath)
-            ));
+        try (var in = getClass().getResourceAsStream(imagePath)) {
+            if (in == null) throw new IllegalArgumentException("Missing tileset image: " + imagePath);
+            tileset = ImageIO.read(in);
+            if (tileset == null) throw new IllegalArgumentException("Unsupported/invalid image: " + imagePath);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to load tileset image: " + imagePath, e);
         }
+
         this.firstGid = firstGid;
         this.tilesetColumns = columns;
     }
@@ -72,16 +72,18 @@ public class TiledMap {
 
     public void draw(Graphics2D g, Camera cam) {
         if (tileset == null) return;
+        if (tilesetColumns <= 0) return;
+
         int startX = Math.max(0, (int) (cam.x / tileWidth));
         int startY = Math.max(0, (int) (cam.y / tileHeight));
         int endX = Math.min(width - 1, (int) ((cam.x + cam.viewW) / tileWidth) + 1);
         int endY = Math.min(height - 1, (int) ((cam.y + cam.viewH) / tileHeight) + 1);
 
-
         for (int[] layer : layers) {
             for (int ty = startY; ty <= endY; ty++) {
                 for (int tx = startX; tx <= endX; tx++) {
-                    int gid = layer[ty * width + tx];
+                    int raw = layer[ty * width + tx];
+                    int gid = raw & 0x1FFFFFFF; // mask out flip bits
                     if (gid == 0) continue;
                     int local = gid - firstGid;
                     if (local < 0) continue;
@@ -95,7 +97,7 @@ public class TiledMap {
         }
     }
 
-    public boolean isWalkable(float worldX, float worldY) {
+    public boolean isWalkable(float worldX, float worldY) { // Not using it for now since the whole map is bounded.
         // Convert world pixel coords to tile coords
         int tileX = (int) (worldX / tileWidth);
         int tileY = (int) (worldY / tileHeight);
@@ -111,7 +113,7 @@ public class TiledMap {
         }
 
         // We treat the first tile layer as the ground
-        int[] ground = layers.getFirst();  // <-- index 0 = Ground
+        int[] ground = layers.getFirst();  // <-- index 0 = Ground. getFirst() on Java 21+ (Project uses Java 23)
 
         int index = tileY * width + tileX;
         if (index < 0 || index >= ground.length) {
@@ -119,7 +121,9 @@ public class TiledMap {
             return false;
         }
 
-        int gid = ground[index]; // 0 = no tile, >0 = some tile from terrain set
+        // 0 = no tile, >0 = some tile from terrain set
+        int raw = ground[index];
+        int gid = raw & 0x1FFFFFFF;
 
         // No tile on ground layer = pit/void
         return gid != 0;

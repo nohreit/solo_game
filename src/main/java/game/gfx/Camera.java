@@ -23,11 +23,19 @@ public class Camera {
         clamp();
     }
 
-
     public void clamp() {
-        if (x < 0) x = 0;
-        if (y < 0) y = 0;
-        if (x > worldW - viewW) x = worldW - viewW;
-        if (y > worldH - viewH) y = worldH - viewH;
+        if (worldW <= viewW) {
+            x = 0;
+        } else {
+            if (x < 0) x = 0;
+            if (x > worldW - viewW) x = worldW - viewW;
+        }
+
+        if (worldH <= viewH) {
+            y = 0;
+        } else {
+            if (y < 0) y = 0;
+            if (y > worldH - viewH) y = worldH - viewH;
+        }
     }
 }

@@ -1,7 +1,6 @@
 package main.java.game;
 
 import javax.swing.*;
-import java.net.URI;
 
 public class Game {
     public static final int VIRTUAL_WIDTH = 1280;
@@ -22,6 +21,7 @@ public class Game {
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
+            panel.requestFocusInWindow();
 
             panel.init();
             panel.startLoop();

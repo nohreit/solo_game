@@ -4,8 +4,12 @@ import java.net.URI;
 
 public class ResourcePathResolver {
     public static String resolve(String baseResourcePath, String relativePath) {
-        // baseResourcePath: "/maps/demo.tmj"
-        // relativePath: "../../tiled/Terrain.tsj"
+        // baseResourcePath: "/maps/demo.json"
+        // relativePath: "../../tiled/Terrain.json"
+        if (baseResourcePath == null || relativePath == null) {
+            throw new IllegalArgumentException("Paths must not be null");
+        }
+
 
         // Get directory part: "/maps/"
         int lastSlash = baseResourcePath.lastIndexOf('/');
@@ -18,8 +22,8 @@ public class ResourcePathResolver {
         URI resolved = baseUri.resolve(relativePath);  // handles ../ and ./
 
         // Extract the normalized path (still usable as a classpath resource)
-        String normalizedPath = resolved.getPath(); // e.g. "/tiled/Terrain.tsj"
-
-        return normalizedPath;
+        // e.g. "/tiled/Terrain.json"
+        // Returns a normalized absolute classpath resource path (starts with '/')
+        return resolved.getPath();
     }
 }

@@ -6,7 +6,7 @@ import java.awt.event.KeyEvent;
 
 
 public class Input extends KeyAdapter {
-    private boolean up, down, left, right, attack, guard;
+    private boolean up, down, left, right, attack, guard, restart;
 
 
     @Override
@@ -28,6 +28,7 @@ public class Input extends KeyAdapter {
             case KeyEvent.VK_D, KeyEvent.VK_RIGHT -> right = on;
             case KeyEvent.VK_J -> attack = on;
             case KeyEvent.VK_K -> guard = on;
+            case KeyEvent.VK_R -> restart = on;
         }
     }
 
@@ -54,5 +55,9 @@ public class Input extends KeyAdapter {
 
     public boolean isGuard() {
         return guard;
+    }
+
+    public boolean isRestart() {
+        return restart;
     }
 }
