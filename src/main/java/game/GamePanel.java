@@ -37,7 +37,8 @@ public class GamePanel extends JPanel implements Runnable {
 
     public enum GameState {
         PLAYING,
-        GAME_OVER
+        GAME_OVER,
+        WIN
     }
 
     public GamePanel(int virtualW, int virtualH, int scale) {
@@ -133,7 +134,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     private void update(double dt) {
 
-        if (state == GameState.GAME_OVER) {
+        if (state == GameState.WIN || state == GameState.GAME_OVER) {
             if (input.isRestart()) restart();
             return;
         }
@@ -221,17 +222,20 @@ public class GamePanel extends JPanel implements Runnable {
                 }
             }
 
-
             // Clean up after the fade
             if (e.isRemoved()) {
                 it.remove();
             }
         }
 
+        if (enemies.isEmpty()) {
+            state = GameState.WIN;
+            return;
+        }
+
         if (player.isDead()) {
             state = GameState.GAME_OVER;
         }
-
     }
 
     private void restart() {
@@ -271,6 +275,19 @@ public class GamePanel extends JPanel implements Runnable {
                 g.setColor(Color.RED);
                 g.setFont(new Font("Arial", Font.BOLD, 48));
                 g.drawString("GAME OVER", vw / 2 - 150, vh / 2);
+
+                g.setFont(new Font("Arial", Font.PLAIN, 18));
+                g.setColor(Color.WHITE);
+                g.drawString("Press R to Restart", vw / 2 - 95, vh / 2 + 35);
+            }
+
+            if (state == GameState.WIN) {
+                g.setColor(new Color(0, 0, 0, 180));
+                g.fillRect(0, 0, vw, vh);
+
+                g.setColor(new Color(60, 220, 120));
+                g.setFont(new Font("Arial", Font.BOLD, 48));
+                g.drawString("YOU WIN!", vw / 2 - 135, vh / 2);
 
                 g.setFont(new Font("Arial", Font.PLAIN, 18));
                 g.setColor(Color.WHITE);
