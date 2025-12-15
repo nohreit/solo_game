@@ -66,7 +66,7 @@ public class EnemyWarrior {
     // Enemy attack control
     private boolean attackPlaying = false;
     private int attackTicks = 0;
-    private int attackDurationTicks = 30;     // will set from animation if you want
+    private int attackDurationTicks = 30;
     private int attackCooldownTicks = 0;
 
     // Tune to make enemy slower than player or to satisfactory delay.
