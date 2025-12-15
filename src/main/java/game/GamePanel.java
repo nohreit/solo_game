@@ -93,13 +93,13 @@ public class GamePanel extends JPanel implements Runnable {
 
     // Helper to spawn in tile coordinates.
     private void spawnPlayerTile(int tileX, int tileY) {
-        int TILE = 64; // use your actual tile size
+        int TILE = 64;
         String playerBase = "/main/resources/sprites/player/Black_Units/Warrior/";
         player = new Player(tileX * TILE + TILE / 2f, tileY * TILE + TILE / 2f, playerBase);
     }
 
     private void spawnEnemyTile(int tileX, int tileY) {
-        int TILE = 64; // use your actual tile size
+        int TILE = 64;
         String redBase = "/main/resources/sprites/player/Red_Units/Warrior/";
         enemies.add(new EnemyWarrior(tileX * TILE + TILE / 2f, tileY * TILE + TILE / 2f, redBase));
     }
@@ -245,7 +245,7 @@ public class GamePanel extends JPanel implements Runnable {
         camera.centerOn(player.x, player.y);
     }
 
-    boolean DEBUG = false;
+    boolean DEBUG = true;
 
     private void render() {
         synchronized (renderLock) {
